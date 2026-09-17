@@ -1,0 +1,93 @@
+<mxGraphModel dx="2084" dy="1644" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="-UD2ftTC9l2t2lAyZyGE-1" parent="1" style="text;html=1;fontSize=20;fontStyle=1;align=center;" value="Alur Refund dan Pembatalan" vertex="1">
+      <mxGeometry height="30" width="600" x="1300" y="30" as="geometry" />
+    </mxCell>
+    <mxCell id="-UD2ftTC9l2t2lAyZyGE-3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=13;" value="PEMICU 1 Bentrok kursi (otomatis)" vertex="1">
+      <mxGeometry height="35" width="330" x="1120" y="100" as="geometry" />
+    </mxCell>
+    <mxCell id="-UD2ftTC9l2t2lAyZyGE-4" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1;fontSize=13;" value="PEMICU 2 Pembatalan oleh pihak bioskop" vertex="1">
+      <mxGeometry height="35" width="390" x="1690" y="100" as="geometry" />
+    </mxCell>
+    <mxCell id="-UD2ftTC9l2t2lAyZyGE-5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;" value="Webhook LUNAS masuk, tapi UPDATE&lt;br&gt;mengembalikan &lt;b&gt;0 baris&lt;/b&gt;&amp;nbsp;kursi sudah&lt;br&gt;bukan milik pesanan ini" vertex="1">
+      <mxGeometry height="65" width="330" x="1120" y="155" as="geometry" />
+    </mxCell>
+    <mxCell id="-UD2ftTC9l2t2lAyZyGE-6" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="Buat permintaan refund&lt;br&gt;&lt;b&gt;UNIQUE (payment_id)&lt;/b&gt;&amp;nbsp;satu pembayaran, satu refund" vertex="1">
+      <mxGeometry height="55" width="330" x="1120" y="270" as="geometry" />
+    </mxCell>
+    <mxCell id="-UD2ftTC9l2t2lAyZyGE-7" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="Admin klik &quot;Batalkan Jadwal&quot;&#10;+ wajib mengisi alasan" vertex="1">
+      <mxGeometry height="50" width="390" x="1690" y="155" as="geometry" />
+    </mxCell>
+    <mxCell id="-UD2ftTC9l2t2lAyZyGE-8" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;strokeWidth=3;fontSize=11;" value="&lt;b&gt;SATU TRANSAKSI&amp;nbsp;&lt;/b&gt;&lt;br&gt;UPDATE showtimes -&amp;gt; CANCELLED&lt;br&gt;INSERT showtime_cancellations (siapa, kapan, alasan)&lt;br&gt;INSERT jobs (&lt;b&gt;refund + pemberitahuan&lt;/b&gt;) ← ±200 pesanan" vertex="1">
+      <mxGeometry height="95" width="390" x="1690" y="230" as="geometry" />
+    </mxCell>
+    <mxCell id="-UD2ftTC9l2t2lAyZyGE-9" parent="1" style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;align=left;spacingLeft=8;" value="Kalau dipisah dua langkah, jadwal bisa CANCELLED&#10;tanpa perintah refund masuk antrean.&#10;Request admin selesai sebelum kotak ini." vertex="1">
+      <mxGeometry height="50" width="300" x="1530" y="360" as="geometry" />
+    </mxCell>
+    <mxCell id="-UD2ftTC9l2t2lAyZyGE-10" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="&lt;b&gt;Worker&lt;/b&gt; mengambil antrean (tabel &lt;i&gt;jobs&lt;/i&gt;)&#10;satu per satu" vertex="1">
+      <mxGeometry height="50" width="390" x="1690" y="425" as="geometry" />
+    </mxCell>
+    <mxCell id="-UD2ftTC9l2t2lAyZyGE-11" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;strokeWidth=3;fontSize=12;" value="&lt;b&gt;Kirim perintah refund ke Payment Gateway&lt;/b&gt;&#10;idempotency key = refund-{order_id}&#10;Nilai: &lt;b&gt;100%&lt;/b&gt; untuk kedua pemicu" vertex="1">
+      <mxGeometry height="70" width="440" x="1380" y="530" as="geometry" />
+    </mxCell>
+    <mxCell id="-UD2ftTC9l2t2lAyZyGE-12" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="Status refund: REQUESTED -&amp;gt; PROCESSING" vertex="1">
+      <mxGeometry height="40" width="330" x="1435" y="625" as="geometry" />
+    </mxCell>
+    <mxCell id="-UD2ftTC9l2t2lAyZyGE-13" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" value="Payment Gateway&#10;mengonfirmasi?" vertex="1">
+      <mxGeometry height="90" width="205" x="1497" y="690" as="geometry" />
+    </mxCell>
+    <mxCell id="-UD2ftTC9l2t2lAyZyGE-14" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" value="&lt;b&gt;SUCCEEDED&lt;/b&gt;&lt;br&gt;pesanan -&amp;gt; REFUNDED, tulis riwayat kursi,&lt;br&gt;beri tahu dana sudah kembali" vertex="1">
+      <mxGeometry height="70" width="330" x="1120" y="815" as="geometry" />
+    </mxCell>
+    <mxCell id="-UD2ftTC9l2t2lAyZyGE-15" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;" value="&lt;b&gt;FAILED&lt;/b&gt;&amp;nbsp;-&amp;gt; retry berjangka&lt;br&gt;3× (1, 3, 9 menit)" vertex="1">
+      <mxGeometry height="55" width="330" x="1750" y="815" as="geometry" />
+    </mxCell>
+    <mxCell id="-UD2ftTC9l2t2lAyZyGE-16" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;" value="Masih gagal -&amp;gt;&amp;nbsp;&lt;b&gt;alert tim&lt;/b&gt;&lt;br&gt;+ penanganan manual" vertex="1">
+      <mxGeometry height="55" width="330" x="1750" y="895" as="geometry" />
+    </mxCell>
+    <mxCell id="-UD2ftTC9l2t2lAyZyGE-17" parent="1" style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;align=left;spacingLeft=8;" value="&lt;b&gt;Nasib kursi&lt;/b&gt;&lt;br&gt;• Jadwal batal -&amp;gt; tidak dijual ulang&lt;br&gt;• Bentrok -&amp;gt; sudah milik pesanan lain&lt;br&gt;• Batal user -&amp;gt; dijual ulang bila &amp;gt; 30 menit" vertex="1">
+      <mxGeometry height="85" width="240" x="1120" y="970" as="geometry" />
+    </mxCell>
+    <mxCell id="-UD2ftTC9l2t2lAyZyGE-18" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;align=left;spacingLeft=12;fontSize=11;verticalAlign=top;spacingTop=8;" value="&lt;b&gt;KENAPA DUA PEMICU DIBEDAKAN&lt;/b&gt;&lt;br&gt;&lt;b&gt;Bioskop&lt;/b&gt;&amp;nbsp;&amp;nbsp;: 100% + biaya layanan · semua pesanan di jadwal itu · kursi tidak dijual ulang&lt;br&gt;&lt;b&gt;Bentrok&lt;/b&gt;&amp;nbsp;&amp;nbsp;: 100% · 1 pesanan · customer tidak dapat kursi&lt;br&gt;&lt;b&gt;User&lt;/b&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;: ada potongan · kursi dijual ulang · &lt;i&gt;di luar cakupan soal&lt;/i&gt;&lt;br&gt;&lt;br&gt;&lt;b&gt;Idempotency wajib&lt;/b&gt;&amp;nbsp;webhook dobel atau worker crash tidak boleh berarti uang keluar dua kali." vertex="1">
+      <mxGeometry height="95" width="480" x="1400" y="970" as="geometry" />
+    </mxCell>
+    <mxCell id="-UD2ftTC9l2t2lAyZyGE-19" edge="1" parent="1" source="-UD2ftTC9l2t2lAyZyGE-5" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeWidth=2;" target="-UD2ftTC9l2t2lAyZyGE-6">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="-UD2ftTC9l2t2lAyZyGE-20" edge="1" parent="1" source="-UD2ftTC9l2t2lAyZyGE-7" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeWidth=2;" target="-UD2ftTC9l2t2lAyZyGE-8">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="-UD2ftTC9l2t2lAyZyGE-21" edge="1" parent="1" source="-UD2ftTC9l2t2lAyZyGE-9" style="edgeStyle=orthogonalEdgeStyle;html=1;dashed=1;strokeColor=#d6b656;endArrow=none;" target="-UD2ftTC9l2t2lAyZyGE-8">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="-UD2ftTC9l2t2lAyZyGE-22" edge="1" parent="1" source="-UD2ftTC9l2t2lAyZyGE-8" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeWidth=2;" target="-UD2ftTC9l2t2lAyZyGE-10">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="-UD2ftTC9l2t2lAyZyGE-23" edge="1" parent="1" source="-UD2ftTC9l2t2lAyZyGE-6" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeWidth=2;" target="-UD2ftTC9l2t2lAyZyGE-11">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="-UD2ftTC9l2t2lAyZyGE-24" edge="1" parent="1" source="-UD2ftTC9l2t2lAyZyGE-10" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeWidth=2;" target="-UD2ftTC9l2t2lAyZyGE-11">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="-UD2ftTC9l2t2lAyZyGE-25" edge="1" parent="1" source="-UD2ftTC9l2t2lAyZyGE-11" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeWidth=2;" target="-UD2ftTC9l2t2lAyZyGE-12">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="-UD2ftTC9l2t2lAyZyGE-26" edge="1" parent="1" source="-UD2ftTC9l2t2lAyZyGE-12" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeWidth=2;" target="-UD2ftTC9l2t2lAyZyGE-13">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="-UD2ftTC9l2t2lAyZyGE-27" edge="1" parent="1" source="-UD2ftTC9l2t2lAyZyGE-13" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeWidth=2;fontStyle=1;fontSize=11;" target="-UD2ftTC9l2t2lAyZyGE-14" value="Ya">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="-UD2ftTC9l2t2lAyZyGE-28" edge="1" parent="1" source="-UD2ftTC9l2t2lAyZyGE-13" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeWidth=2;fontStyle=1;fontSize=11;" target="-UD2ftTC9l2t2lAyZyGE-15" value="Tidak">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="-UD2ftTC9l2t2lAyZyGE-29" edge="1" parent="1" source="-UD2ftTC9l2t2lAyZyGE-15" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeWidth=2;" target="-UD2ftTC9l2t2lAyZyGE-16">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="-UD2ftTC9l2t2lAyZyGE-30" parent="1" style="text;html=1;fontSize=10;fontColor=#666666;align=center;fontStyle=2;labelBackgroundColor=default;" value="lanjutan dari &quot;Alur Teknis Pemesanan&quot;" vertex="1">
+      <mxGeometry height="18" width="330" x="1120" y="220" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>

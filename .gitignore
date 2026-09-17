@@ -1,0 +1,10 @@
+# Catatan kerja internal, bukan bagian dari jawaban
+PROGRESS.md
+docs/diskusi-poin-a.md
+arsip/
+
+# Kredensial. Contohnya ada di .env.example
+.env
+
+# Hasil build
+bin/

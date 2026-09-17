@@ -1,0 +1,1135 @@
+{
+  "info": {
+    "name": "MKP Cinema API - Poin C",
+    "description": "API Login User dan CRUD jadwal tayang.\nBackend Development Test - Mitra Kasih Perkasa 2025.\n\nCara pakai:\n1. Jalankan `db/schema.sql` lalu `db/seed.sql`.\n2. Jalankan server: `go run ./cmd/api`.\n3. Sesuaikan variabel `base_url` bila port bukan 8080.\n4. Jalankan folder 1 lebih dulu supaya token tersimpan, lalu folder 2 dan 3.\n\nSeluruh koleksi bisa dijalankan sekaligus lewat Runner, dan bisa dijalankan berulang kali: tidak ada tanggal atau id yang ditulis mati, semuanya dihitung saat dijalankan atau diambil dari data seed.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Semua tanggal dihitung saat koleksi dijalankan.",
+          "// Tanggal mati akan membuat koleksi ini kedaluwarsa, karena db/seed.sql",
+          "// membuat jadwal secara relatif terhadap current_date.",
+          "const pad = n => String(n).padStart(2, '0');",
+          "const jakarta = d => {",
+          "  const j = new Date(d.getTime() + 7 * 3600 * 1000);",
+          "  return `${j.getUTCFullYear()}-${pad(j.getUTCMonth() + 1)}-${pad(j.getUTCDate())}`",
+          "       + `T${pad(j.getUTCHours())}:${pad(j.getUTCMinutes())}:${pad(j.getUTCSeconds())}+07:00`;",
+          "};",
+          "",
+          "const now = new Date();",
+          "",
+          "// Hari ini menurut jam Jakarta, untuk penyaring ?date=",
+          "pm.collectionVariables.set('today', jakarta(now).slice(0, 10));",
+          "",
+          "// Jadwal baru ditaruh jauh di depan supaya tidak bertumpuk dengan data seed.",
+          "// Detik ikut disertakan, jadi koleksi ini bisa dijalankan berulang kali.",
+          "pm.collectionVariables.set('new_start', jakarta(new Date(now.getTime() + 400 * 86400000)));",
+          "pm.collectionVariables.set('new_start_2', jakarta(new Date(now.getTime() + 401 * 86400000)));"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Login",
+      "description": "Menerbitkan JWT. Token otomatis disimpan ke variabel koleksi, jadi permintaan berikutnya tinggal dijalankan.",
+      "item": [
+        {
+          "name": "Login petugas bioskop",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Akun dengan role cinema_admin. Hanya role ini yang boleh mengubah jadwal tayang.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@mkp.test\",\n  \"password\": \"admin123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const t = pm.response.json().data.token;",
+                  "pm.collectionVariables.set(\"token_admin\", t);",
+                  "pm.test(\"token terbit\", () => pm.expect(t).to.be.a(\"string\"));",
+                  "pm.test(\"role cinema_admin\", () => pm.expect(pm.response.json().data.user.role).to.eql(\"cinema_admin\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login customer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Akun pembeli biasa. Dipakai untuk membuktikan customer tidak bisa mengubah jadwal.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"budi@mail.test\",\n  \"password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set(\"token_customer\", pm.response.json().data.token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Kata sandi salah",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Pesan galatnya sengaja tidak menyebut apakah emailnya ada atau tidak.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"budi@mail.test\",\n  \"password\": \"salah\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Siapa pemilik token ini",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Endpoint kecil untuk membuktikan middleware Authorization benar-benar bekerja.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_customer}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. CRUD jadwal tayang",
+      "description": "Jalankan berurutan dari atas. Create menyimpan id-nya ke variabel showtime_id, dipakai permintaan setelahnya. Delete di akhir membersihkan kembali, jadi seluruh folder ini bisa dijalankan berulang kali.",
+      "item": [
+        {
+          "name": "Daftar jadwal",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/showtimes?page=1&per_page=5",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "showtimes"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "per_page",
+                  "value": "5"
+                }
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"ada meta halaman\", () => pm.expect(body.meta).to.have.property(\"total\"));",
+                  "pm.test(\"data seed terbaca\", () => pm.expect(body.data.length).to.be.above(0));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Daftar jadwal hari ini",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/showtimes?date={{today}}&per_page=100",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "showtimes"
+              ],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "{{today}}"
+                },
+                {
+                  "key": "per_page",
+                  "value": "100"
+                }
+              ]
+            },
+            "description": "date dibaca sebagai satu hari penuh menurut zona waktu APP_TIMEZONE. Tanggalnya dihitung saat dijalankan, dan db/seed.sql selalu membuat jadwal untuk hari ini sampai dua hari ke depan - jadi hasilnya tidak pernah kosong.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"hari ini ada jadwal\", () => pm.expect(pm.response.json().meta.total).to.be.above(0));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Tambah jadwal",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/showtimes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "showtimes"
+              ]
+            },
+            "description": "end_time tidak dikirim. Server menghitungnya dari durasi film di dalam pernyataan SQL yang sama, sehingga tidak mungkin melenceng dari durasi filmnya.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"movie_id\": 1,\n  \"screen_id\": 3,\n  \"start_time\": \"{{new_start}}\",\n  \"price\": 55000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+                  "const d = pm.response.json().data;",
+                  "pm.collectionVariables.set(\"showtime_id\", d.id);",
+                  "pm.collectionVariables.set(\"showtime_screen_id\", d.screen.id);",
+                  "pm.test(\"end_time = start_time + durasi film\", () => {",
+                  "  const menit = (new Date(d.end_time) - new Date(d.start_time)) / 60000;",
+                  "  pm.expect(menit).to.eql(d.movie.duration_minutes);",
+                  "});",
+                  "pm.test(\"harga dikirim sebagai teks, bukan angka pecahan\", () => pm.expect(d.price).to.be.a(\"string\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Detail jadwal",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/showtimes/{{showtime_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "showtimes",
+                "{{showtime_id}}"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Ubah jadwal",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/showtimes/{{showtime_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "showtimes",
+                "{{showtime_id}}"
+              ]
+            },
+            "description": "Seluruh kolom dikirim ulang. end_time dihitung ulang mengikuti durasi film baru. screen_id dikirim dengan nilai yang sama - lihat permintaan berikutnya.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"movie_id\": 2,\n  \"screen_id\": {{showtime_screen_id}},\n  \"start_time\": \"{{new_start_2}}\",\n  \"price\": 60000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"film berganti\", () => pm.expect(pm.response.json().data.movie.id).to.eql(2));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Coba pindah studio -> ditolak",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/showtimes/{{showtime_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "showtimes",
+                "{{showtime_id}}"
+              ]
+            },
+            "description": "Memindahkan jadwal ke studio lain berarti seluruh denah kursinya berganti, sedangkan showtime_seats sudah dibuat mengikuti studio yang lama. Daripada meninggalkan peta kursi yang salah, perubahan screen_id ditolak.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"movie_id\": 2,\n  \"screen_id\": 99999,\n  \"start_time\": \"{{new_start_2}}\",\n  \"price\": 60000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"kode screen_not_changeable\", () => pm.expect(pm.response.json().error.code).to.eql(\"screen_not_changeable\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Hapus jadwal",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/showtimes/{{showtime_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "showtimes",
+                "{{showtime_id}}"
+              ]
+            },
+            "description": "Jadwal yang belum tersentuh transaksi terhapus bersih. Peta kursinya ikut terhapus lewat ON DELETE CASCADE.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Skenario penolakan",
+      "description": "Bagian yang paling layak diperhatikan: setiap penolakan di sini ditegakkan PostgreSQL atau satu pernyataan SQL bersyarat, bukan pemeriksaan terpisah di kode aplikasi.\n\nSatu penjaga tidak bisa diperagakan dari sini - penolakan terhadap jadwal yang kursinya sedang dipegang orang, karena membuat pegangan kursi butuh modul booking yang di luar cakupan Poin C. Uji itu ada di db/verify.sql (uji I1 & I2).",
+      "item": [
+        {
+          "name": "Ambil satu jadwal sebagai acuan",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/showtimes?per_page=1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "showtimes"
+              ],
+              "query": [
+                {
+                  "key": "per_page",
+                  "value": "1"
+                }
+              ]
+            },
+            "description": "Menyimpan jadwal pertama dari data seed ke variabel, supaya permintaan di bawah tidak perlu menyebut id atau tanggal secara mati.\n\ndb/seed.sql memasang pesanan lunas beserta tiketnya pada jadwal paling awal - itulah yang dipakai dua permintaan 'sudah terjual' di bawah.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+                  "const s = pm.response.json().data[0];",
+                  "pm.test(\"ada jadwal dari seed\", () => pm.expect(s).to.be.an(\"object\"));",
+                  "pm.collectionVariables.set(\"seed_showtime_id\", s.id);",
+                  "pm.collectionVariables.set(\"seed_screen_id\", s.screen.id);",
+                  "",
+                  "// Satu menit setelah jadwal itu mulai: pasti masih di dalam rentang tayangnya,",
+                  "// jadi jadwal baru pada studio yang sama dijamin bertumpuk.",
+                  "const pad = n => String(n).padStart(2, '0');",
+                  "const jakarta = d => {",
+                  "  const j = new Date(d.getTime() + 7 * 3600 * 1000);",
+                  "  return `${j.getUTCFullYear()}-${pad(j.getUTCMonth() + 1)}-${pad(j.getUTCDate())}`",
+                  "       + `T${pad(j.getUTCHours())}:${pad(j.getUTCMinutes())}:${pad(j.getUTCSeconds())}+07:00`;",
+                  "};",
+                  "pm.collectionVariables.set(\"overlap_start\",",
+                  "  jakarta(new Date(new Date(s.start_time).getTime() + 60000)));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Tanpa token -> 401",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/showtimes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "showtimes"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Token asal-asalan -> 401",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/showtimes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "showtimes"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "abc.def.ghi",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Customer menambah jadwal -> 403",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/showtimes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "showtimes"
+              ]
+            },
+            "description": "Token sah, tetapi role-nya customer. Jadwal tayang adalah data operasional bioskop.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_customer}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"movie_id\": 1,\n  \"screen_id\": 3,\n  \"start_time\": \"{{new_start}}\",\n  \"price\": 55000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 403\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"kode forbidden\", () => pm.expect(pm.response.json().error.code).to.eql(\"forbidden\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Jadwal bertumpuk -> 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/showtimes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "showtimes"
+              ]
+            },
+            "description": "Satu studio tidak boleh menayangkan dua film pada rentang waktu yang bertumpuk. Dijaga EXCLUDE USING gist pada tabel showtimes, bukan oleh SELECT pemeriksaan - sehingga dua petugas yang menyimpan pada detik yang sama pun tidak bisa keduanya lolos.\n\nStudio dan waktunya diambil dari jadwal acuan di atas, jadi pertumpukannya selalu terjadi kapan pun koleksi ini dijalankan.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"movie_id\": 1,\n  \"screen_id\": {{seed_screen_id}},\n  \"start_time\": \"{{overlap_start}}\",\n  \"price\": 50000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"kode schedule_conflict\", () => pm.expect(pm.response.json().error.code).to.eql(\"schedule_conflict\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Ubah jadwal yang sudah terjual -> 409",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/showtimes/{{seed_showtime_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "showtimes",
+                "{{seed_showtime_id}}"
+              ]
+            },
+            "description": "Menggeser jam tayang yang tiketnya sudah dipegang orang bukan penyuntingan data, melainkan pembatalan yang menuntut pemberitahuan dan pengembalian dana.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"movie_id\": 1,\n  \"screen_id\": {{seed_screen_id}},\n  \"start_time\": \"{{new_start}}\",\n  \"price\": 50000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"kode showtime_has_tickets\", () => pm.expect(pm.response.json().error.code).to.eql(\"showtime_has_tickets\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Hapus jadwal yang sudah terjual -> 409",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/showtimes/{{seed_showtime_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "showtimes",
+                "{{seed_showtime_id}}"
+              ]
+            },
+            "description": "Ditahan ON DELETE RESTRICT dari tabel orders dan tickets.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"kode showtime_in_use\", () => pm.expect(pm.response.json().error.code).to.eql(\"showtime_in_use\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Film tidak ada -> 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/showtimes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "showtimes"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"movie_id\": 999999,\n  \"screen_id\": 3,\n  \"start_time\": \"{{new_start}}\",\n  \"price\": 50000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"kode movie_not_found\", () => pm.expect(pm.response.json().error.code).to.eql(\"movie_not_found\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Waktu tanpa zona -> 400",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/showtimes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "showtimes"
+              ]
+            },
+            "description": "Jam tanpa zona waktu tidak punya arti tunggal bagi jaringan bioskop lintas zona.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"movie_id\": 1,\n  \"screen_id\": 3,\n  \"start_time\": \"2027-04-01 13:00\",\n  \"price\": 50000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Jadwal tidak ada -> 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/showtimes/999999",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "showtimes",
+                "999999"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_admin}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"kode not_found\", () => pm.expect(pm.response.json().error.code).to.eql(\"not_found\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "token_admin",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "token_customer",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "showtime_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "showtime_screen_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "seed_showtime_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "seed_screen_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "overlap_start",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "today",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "new_start",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "new_start_2",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

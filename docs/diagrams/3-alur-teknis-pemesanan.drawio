@@ -1,0 +1,145 @@
+<mxGraphModel dx="4285" dy="2878" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-1" parent="1" style="text;html=1;fontSize=20;fontStyle=1;align=center;" value="Alur Teknis Pemesanan Kursi" vertex="1">
+      <mxGeometry height="30" width="520" x="980" y="30" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-3" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;" value="Tekan &quot;Lanjutkan&quot;&lt;br&gt;&lt;b&gt;POST /orders&lt;/b&gt;&amp;nbsp;" vertex="1">
+      <mxGeometry height="55" width="170" x="1155" y="95" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;strokeWidth=3;fontSize=11;" value="&lt;b&gt;&amp;nbsp;SATU TRANSAKSI&amp;nbsp;&lt;/b&gt;&lt;br&gt;&lt;b&gt;1.&lt;/b&gt; INSERT orders -&amp;gt; PENDING (T+07:00)&lt;br&gt;&lt;b&gt;2.&lt;/b&gt; UPDATE showtime_seats -&amp;gt; held&lt;br&gt;&lt;i&gt;hanya jika bebas / pegangan lama mati&lt;/i&gt;" vertex="1">
+      <mxGeometry height="95" width="260" x="1110" y="180" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-5" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" value="Semua kursi&#10;didapat?" vertex="1">
+      <mxGeometry height="80" width="115" x="1182.5" y="305" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-6" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" value="&lt;b&gt;ROLLBACK&lt;/b&gt;&amp;nbsp;&lt;div&gt;pesanan ikut terhapus&lt;br&gt;&lt;i&gt;respons menyebut kursi yang gagal&lt;/i&gt;&lt;/div&gt;" vertex="1">
+      <mxGeometry height="60" width="200" x="900" y="315" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-7" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;dashed=1;fontSize=12;" value="Halaman ringkasan&amp;nbsp;&lt;div&gt;pilih metode pembayaran&lt;br&gt;&lt;i&gt;hitung mundur tetap jalan&lt;/i&gt;&lt;/div&gt;" vertex="1">
+      <mxGeometry height="60" width="245" x="1117.5" y="430" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-8" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="Tekan &quot;Bayar&quot;&#10;&lt;b&gt;POST /orders/{id}/payment&lt;/b&gt;" vertex="1">
+      <mxGeometry height="50" width="240" x="1120" y="530" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-9" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;strokeWidth=3;fontSize=12;" value="Minta tagihan ke &lt;b&gt;Payment Gateway&lt;/b&gt;&#10;tenggat = &lt;b&gt;orders.expires_at&lt;/b&gt;&#10;&lt;i&gt;bukan 7 menit baru&lt;/i&gt;" vertex="1">
+      <mxGeometry height="65" width="252.5" x="1113.75" y="610" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-10" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" value="Tagihan terbit?" vertex="1">
+      <mxGeometry height="80" width="105" x="1187.5" y="710" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-11" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;align=left;" value="Dicoba ulang lagi. Masih gagal -&amp;gt; pesanan&lt;br&gt;dibatalkan, kursi dilepas segera" vertex="1">
+      <mxGeometry height="55" width="220" x="880" y="722.5" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-12" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="Status &lt;b&gt;AWAITING_PAYMENT&lt;/b&gt;" vertex="1">
+      <mxGeometry height="45" width="180" x="1150" y="830" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-13" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" value="Webhook masuk&#10;&amp; LUNAS?" vertex="1">
+      <mxGeometry height="85" width="135" x="1172.5" y="910" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-14" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;align=left;spacingLeft=8;" value="&lt;b&gt;Lewat T+07:00&lt;/b&gt;&lt;br&gt;• Pembayaran baru ditolak PG -&amp;gt; uang tidak keluar&lt;br&gt;• Pegangan kursi hangus, pesanan jadi FAILED&lt;br&gt;&lt;i&gt;webhook GAGAL berakhir di sini juga&lt;/i&gt;" vertex="1">
+      <mxGeometry height="85" width="210" x="890" y="910" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-15" parent="1" style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;align=left;spacingLeft=6;" value="Webhook hilang?&amp;nbsp;&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;polling&lt;/span&gt;" vertex="1">
+      <mxGeometry height="42.5" width="150" x="1341" y="931.25" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-16" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="Cek &lt;b&gt;idempotency&lt;/b&gt;&amp;nbsp;&lt;div&gt;UNIQUE (payment_reference)&lt;/div&gt;" vertex="1">
+      <mxGeometry height="45" width="200" x="1140" y="1040" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-17" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" value="Sudah pernah&amp;nbsp;&lt;div&gt;diproses?&lt;/div&gt;" vertex="1">
+      <mxGeometry height="80" width="132.5" x="1173.75" y="1117.5" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-18" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontSize=12;" value="Balas 200 OK, tanpa tindakan" vertex="1">
+      <mxGeometry height="45" width="170" x="1380" y="1135" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-19" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;strokeWidth=3;fontSize=12;" value="UPDATE showtime_seats -&amp;gt; 'sold'&lt;br&gt;&lt;b&gt;WHERE held_by_order = pesanan ini&lt;/b&gt;" vertex="1">
+      <mxGeometry height="55" width="235" x="1122.5" y="1250" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-20" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" value="Ada baris&#10;terubah?" vertex="1">
+      <mxGeometry height="80" width="90" x="1195" y="1334" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-21" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;strokeWidth=3;fontSize=12;" value="&lt;b&gt;REFUND OTOMATIS&lt;/b&gt;&#10;&lt;b&gt;0 baris&lt;/b&gt; = kursi milik pesanan lain" vertex="1">
+      <mxGeometry height="55" width="190" x="1380" y="1346.5" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-22" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="Tulis riwayat + terbitkan tiket&#10;+ bangun ulang cache denah" vertex="1">
+      <mxGeometry height="50" width="200" x="1140" y="1460" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-23" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;" value="E-ticket + QR dikirim" vertex="1">
+      <mxGeometry height="50" width="150" x="1165" y="1540" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-24" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;align=left;spacingLeft=12;fontSize=11;verticalAlign=top;spacingTop=10;" value="&lt;b&gt;TIGA LAPIS PERTAHANAN&lt;/b&gt;&lt;br&gt;&lt;br&gt;&lt;b&gt;1. CEGAH&lt;/b&gt;&amp;nbsp;pegangan kursi bertenggat&lt;br&gt;&lt;b&gt;2. DETEKSI&lt;/b&gt;&amp;nbsp;UPDATE bersyarat -&amp;gt; 0 baris&lt;br&gt;&lt;b&gt;3. KOMPENSASI&lt;/b&gt;&amp;nbsp;refund otomatis&lt;br&gt;&lt;br&gt;&lt;i&gt;Redis melayani pembacaan;&lt;br&gt;PostgreSQL memutuskan kepemilikan.&lt;/i&gt;" vertex="1">
+      <mxGeometry height="130" width="240" x="1380" y="290" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-25" edge="1" parent="1" source="tF_pj0j3hG1oAxBeh2mh-3" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeWidth=2;" target="tF_pj0j3hG1oAxBeh2mh-4">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-26" edge="1" parent="1" source="tF_pj0j3hG1oAxBeh2mh-4" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeWidth=2;" target="tF_pj0j3hG1oAxBeh2mh-5">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-27" edge="1" parent="1" source="tF_pj0j3hG1oAxBeh2mh-5" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeWidth=2;fontStyle=1;fontSize=11;" target="tF_pj0j3hG1oAxBeh2mh-6" value="Tidak">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-28" edge="1" parent="1" source="tF_pj0j3hG1oAxBeh2mh-5" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeWidth=2;fontStyle=1;fontSize=11;" target="tF_pj0j3hG1oAxBeh2mh-7" value="Ya">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-29" edge="1" parent="1" source="tF_pj0j3hG1oAxBeh2mh-7" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeWidth=2;" target="tF_pj0j3hG1oAxBeh2mh-8">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-30" edge="1" parent="1" source="tF_pj0j3hG1oAxBeh2mh-8" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeWidth=2;" target="tF_pj0j3hG1oAxBeh2mh-9">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-31" edge="1" parent="1" source="tF_pj0j3hG1oAxBeh2mh-9" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeWidth=2;" target="tF_pj0j3hG1oAxBeh2mh-10">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-32" edge="1" parent="1" source="tF_pj0j3hG1oAxBeh2mh-10" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeWidth=2;fontStyle=1;fontSize=11;" target="tF_pj0j3hG1oAxBeh2mh-11" value="Tidak">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-33" edge="1" parent="1" source="tF_pj0j3hG1oAxBeh2mh-10" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeWidth=2;fontStyle=1;fontSize=11;" target="tF_pj0j3hG1oAxBeh2mh-12" value="Ya">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-34" edge="1" parent="1" source="tF_pj0j3hG1oAxBeh2mh-12" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeWidth=2;" target="tF_pj0j3hG1oAxBeh2mh-13">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-35" edge="1" parent="1" source="tF_pj0j3hG1oAxBeh2mh-13" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeWidth=2;fontStyle=1;fontSize=11;" target="tF_pj0j3hG1oAxBeh2mh-14" value="Tidak">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-36" edge="1" parent="1" source="tF_pj0j3hG1oAxBeh2mh-15" style="edgeStyle=orthogonalEdgeStyle;html=1;dashed=1;strokeColor=#d6b656;endArrow=none;" target="tF_pj0j3hG1oAxBeh2mh-13">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="1438" y="953" />
+        </Array>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-37" edge="1" parent="1" source="tF_pj0j3hG1oAxBeh2mh-13" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeWidth=2;fontStyle=1;fontSize=11;" target="tF_pj0j3hG1oAxBeh2mh-16" value="Ya">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-38" edge="1" parent="1" source="tF_pj0j3hG1oAxBeh2mh-16" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeWidth=2;" target="tF_pj0j3hG1oAxBeh2mh-17">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-39" edge="1" parent="1" source="tF_pj0j3hG1oAxBeh2mh-17" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeWidth=2;fontStyle=1;fontSize=11;" target="tF_pj0j3hG1oAxBeh2mh-18" value="Ya">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-40" edge="1" parent="1" source="tF_pj0j3hG1oAxBeh2mh-17" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeWidth=2;fontStyle=1;fontSize=11;" target="tF_pj0j3hG1oAxBeh2mh-19" value="Belum">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-41" edge="1" parent="1" source="tF_pj0j3hG1oAxBeh2mh-19" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeWidth=2;" target="tF_pj0j3hG1oAxBeh2mh-20">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-42" edge="1" parent="1" source="tF_pj0j3hG1oAxBeh2mh-20" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeWidth=2;fontStyle=1;fontSize=11;" target="tF_pj0j3hG1oAxBeh2mh-21" value="0 baris">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-43" edge="1" parent="1" source="tF_pj0j3hG1oAxBeh2mh-20" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeWidth=2;fontStyle=1;fontSize=11;" target="tF_pj0j3hG1oAxBeh2mh-22" value="Ya">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-44" edge="1" parent="1" source="tF_pj0j3hG1oAxBeh2mh-22" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeWidth=2;" target="tF_pj0j3hG1oAxBeh2mh-23">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-45" parent="1" style="shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;align=left;spacingLeft=8;verticalAlign=top;spacingTop=6;" value="&lt;b&gt;Bayar terlambat ≠ kabar terlambat.&lt;/b&gt;&#10;Pembayaran sebelum tenggat yang kabarnya&#10;sampai setelah kursinya diambil pesanan&#10;lain berakhir di sini." vertex="1">
+      <mxGeometry height="75" width="240" x="1355" y="1420" as="geometry" />
+    </mxCell>
+    <mxCell id="tF_pj0j3hG1oAxBeh2mh-46" edge="1" parent="1" source="tF_pj0j3hG1oAxBeh2mh-45" style="edgeStyle=orthogonalEdgeStyle;html=1;dashed=1;strokeColor=#d6b656;endArrow=none;" target="tF_pj0j3hG1oAxBeh2mh-21">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+  </root>
+</mxGraphModel>
