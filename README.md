@@ -16,7 +16,7 @@ Platform pembelian tiket bioskop online untuk jaringan berskala nasional.
 | --- | --- |
 | Instruksi 1 - topologi sistem, export JPG | [`docs/diagrams/1-topologi-sistem.jpg`](docs/diagrams/1-topologi-sistem.jpg) |
 | A.1 - flowchart yang dapat dipahami orang awam | [`docs/diagrams/2-perjalanan-customer.jpg`](docs/diagrams/2-perjalanan-customer.jpg) |
-| A.2 - pemilihan kursi, restok tiket, refund dari bioskop | [`docs/system-design.md`](docs/system-design.md) bagian 3, 4, dan 5 |
+| A.2 - pemilihan kursi, restok tiket, refund dari bioskop | [`docs/system-design.md`](docs/system-design.md) |
 | Instruksi 2 - database design + script PostgreSQL | [`docs/erd.md`](docs/erd.md), [`db/schema.sql`](db/schema.sql) |
 | C - API login user + CRUD jadwal tayang | [`cmd/api`](cmd/api), [`internal/`](internal) |
 | Instruksi 4 - export Postman | [`postman/`](postman) |

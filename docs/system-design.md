@@ -2,49 +2,43 @@
 
 Backend Development Test, Mitra Kasih Perkasa 2025 - Poin A
 
-Soal meminta tiga hal dijelaskan: sistem pemilihan tempat duduk yang tetap benar
-walau diakses banyak orang, sistem restok tiket yang sudah terjual, dan alur
-refund atau pembatalan dari pihak bioskop. Ketiganya dijawab pada bagian 3, 4,
-dan 5. Diagram pendukungnya ditanam langsung di bagian yang membahasnya.
+Soal minta tiga hal dijelaskan: cara memilih tempat duduk supaya tetap benar
+walau diakses banyak orang, cara restok tiket yang sudah terjual, dan alur
+refund kalau bioskop yang membatalkan. Saya bahas ketiganya di bawah, dengan
+gambarnya langsung di bagian yang bersangkutan.
 
----
+## Masalah yang saya kejar
 
-## 1. Masalah inti
-
-Kalimat kunci dari soal:
+Kalimat yang saya pegang dari soal:
 
 > "customer dapat melakukan transaksi kapanpun secara online tanpa khawatir
 > mengenai nomor kursi tempat duduk karena tidak akan digunakan oleh orang lain"
 
-Saya membacanya sebagai satu masalah spesifik: ada jeda waktu antara "saya pilih
-kursi" dan "uang benar-benar masuk". User memilih kursi, memilih metode
-pembayaran, membuka aplikasi bank, membayar, lalu notifikasinya sampai ke
-sistem. Jeda itu bisa beberapa menit.
+Bagi saya itu satu masalah yang cukup spesifik: ada jeda antara "saya pilih
+kursi" dan "uangnya benar-benar masuk". User pilih kursi, pilih metode bayar,
+buka aplikasi bank, bayar, lalu notifikasinya sampai ke sistem. Jedanya bisa
+beberapa menit.
 
-Selama jeda itu, kursi A5 milik siapa? Kalau belum milik siapa-siapa sampai
-lunas, dua orang bisa membayar untuk kursi yang sama. Kalau langsung miliknya
+Selama jeda itu kursi A5 milik siapa? Kalau belum milik siapa-siapa sampai
+lunas, dua orang bisa bayar untuk kursi yang sama. Kalau langsung jadi miliknya
 selamanya begitu diklik, satu orang bisa memblokir seluruh studio tanpa pernah
-membayar.
+bayar.
 
-Jadi kursi dipegang sementara dengan batas waktu **7 menit**: cukup panjang untuk
-menyelesaikan pembayaran di aplikasi bank, cukup pendek supaya kursi tidak
-tertahan lama oleh orang yang tidak jadi membeli. Angka itu saya taruh di
-konfigurasi, bukan dipaku di kode, karena nilai yang tepat hanya bisa ditentukan
-dari data pembayaran yang sebenarnya. Semua tenggat lain dalam rancangan ini
-mengikuti nilai tersebut.
+Jadi saya buat kursi dipegang sementara, 7 menit. Cukup untuk menyelesaikan
+pembayaran di aplikasi bank, dan tidak terlalu lama menahan kursi kalau orangnya
+tidak jadi beli. Angkanya saya taruh di konfigurasi, bukan di kode, karena nilai
+yang pas hanya bisa ditentukan dari data pembayaran yang sebenarnya. Tenggat lain
+di rancangan ini semuanya ikut angka itu.
 
----
+## Alur yang dilihat customer
 
-## 2. Alur yang dilihat customer
-
-Tugas A.1 meminta flowchart yang dapat dipahami orang awam:
+Flowchart untuk Tugas A.1:
 
 ![Perjalanan customer membeli tiket](diagrams/2-perjalanan-customer.jpg)
 
 Sumber: [`2-perjalanan-customer.drawio`](diagrams/2-perjalanan-customer.drawio)
 
-Di belakang alur itu, seluruh rancangan berputar pada satu siklus hidup kursi,
-dan siklus itulah yang menjawab ketiga pertanyaan pada Tugas A.2:
+Di belakangnya, semuanya berputar pada satu siklus hidup kursi:
 
 ```
 available ──► held (sementara) ──► sold ──► refunded
@@ -53,28 +47,21 @@ available ──► held (sementara) ──► sold ──► refunded
         kembali tersedia (restok)
 ```
 
-- Pemilihan kursi = perpindahan `available → held → sold`, harus aman saat banyak
-  orang berebut (bagian 3).
-- Pencatatan dan restok = perpindahan balik ke `available`, beserta riwayatnya
-  (bagian 4).
-- Refund dan pembatalan = perpindahan `sold → refunded`, beserta urusan uang
-  (bagian 5).
+Tiga pertanyaan di Tugas A.2 sebenarnya tiga potongan dari siklus itu. Pemilihan
+kursi adalah `available → held → sold`, restok adalah jalan pulangnya ke
+`available`, dan refund adalah `sold → refunded` beserta urusan uangnya.
 
----
+## Pemilihan kursi
 
-## 3. Sistem pemilihan kursi
-
-### 3.1 Cara yang umum dipakai justru tidak aman
-
-Pendekatan yang paling sering ditemui:
+Cara yang paling sering saya lihat justru punya lubang:
 
 ```
-1. cek ke database: apakah kursi A5 masih kosong?
-2. kalau kosong → simpan kursi A5 atas nama user ini
+1. cek ke database: kursi A5 masih kosong?
+2. kalau kosong, simpan A5 atas nama user ini
 ```
 
-Di antara langkah 1 dan 2 ada jeda, dan dua permintaan yang datang hampir
-bersamaan bisa sama-sama lolos pengecekan sebelum salah satunya menyimpan:
+Di antara dua langkah itu ada jeda. Dua permintaan yang datang hampir bersamaan
+bisa lolos berdua sebelum salah satunya menyimpan:
 
 ```
 10:00.000   Budi  : cek A5 → kosong
@@ -83,13 +70,11 @@ bersamaan bisa sama-sama lolos pengecekan sebelum salah satunya menyimpan:
 10:00.003   Siti  : simpan A5
 ```
 
-Celah ini tidak bisa ditutup dengan mengecek lebih teliti, karena jedanya selalu
-ada. Prinsip yang saya pegang:
+Mengecek lebih teliti tidak menolong, karena jedanya selalu ada. Yang saya pilih
+adalah menyerahkan aturannya ke database.
 
-> Kalau kebenaran data bergantung pada `if` di kode aplikasi, ada celah. Kalau
-> bergantung pada aturan yang ditegakkan mesin database, tidak ada.
-
-### 3.2 Satu kursi pada satu jadwal = satu baris
+Satu kursi pada satu jadwal saya beri satu baris, dibuat otomatis begitu
+jadwalnya dibuat:
 
 ```sql
 CREATE TABLE showtime_seats (
@@ -102,11 +87,11 @@ CREATE TABLE showtime_seats (
 );
 ```
 
-Barisnya dibuat otomatis saat jadwal dibuat. `PRIMARY KEY (showtime_id, seat_id)`
-membuat satu kursi hanya punya satu baris, jadi pemilik kedua tidak ditolak
-karena ada yang memeriksa, tapi karena tidak ada tempat untuknya.
+`PRIMARY KEY (showtime_id, seat_id)` bikin satu kursi hanya punya satu baris.
+Pemilik kedua jadi bukan ditolak karena ada yang memeriksa, tapi karena tidak ada
+tempat untuknya.
 
-### 3.3 Klaim kursi = satu perintah bersyarat
+Klaimnya satu perintah:
 
 ```sql
 UPDATE showtime_seats
@@ -118,29 +103,29 @@ WHERE  showtime_id = $1 AND seat_id = $2
 RETURNING seat_id;
 ```
 
-Memeriksa dan mengubah terjadi dalam satu operasi, jadi tidak ada jeda yang bisa
-disela. Satu baris kembali berarti kursi sah dipegang pesanan ini. Nol baris
-kembali berarti kursi sedang dipegang orang lain atau sudah terjual, dan
-permintaannya ditolak dengan pesan "kursi baru saja diambil pengguna lain".
+Memeriksa dan mengubah jadi satu operasi, jadi tidak ada jeda yang bisa disela.
+Satu baris kembali berarti kursi sah dipegang pesanan ini. Nol baris berarti
+kursi sudah dipegang orang lain atau sudah terjual, dan permintaannya saya tolak
+dengan pesan "kursi baru saja diambil pengguna lain".
 
-Soal meminta rancangan ini tetap bisa diakses banyak orang. PostgreSQL mengunci
-baris kursi itu saja selama `UPDATE` berjalan, sehingga dua permintaan untuk
-kursi yang sama dievaluasi berurutan sementara kursi lain di studio yang sama
-tidak terpengaruh. Antrean hanya terjadi di antara orang yang memang berebut
-kursi yang sama persis.
+Soal juga minta rancangan ini tetap bisa diakses banyak orang. PostgreSQL hanya
+mengunci baris kursi itu selama `UPDATE` jalan, jadi dua permintaan untuk kursi
+yang sama dievaluasi berurutan sementara kursi lain di studio yang sama tidak
+terganggu. Antreannya hanya di antara orang yang memang berebut kursi yang sama
+persis.
 
-Saya memilih menolak yang kalah, bukan mengunci lebih awal lalu membuat orang
-menunggu. Bentrokan per kursi sebenarnya jarang; yang ramai adalah jadwal
-tayangnya. Dan kalau memang bentrok, "kursi sudah diambil" itu jawaban yang
-benar, karena menunggu tidak mengubah hasilnya.
+Saya pilih menolak yang kalah daripada mengunci lebih awal lalu bikin orang
+menunggu. Bentrokan per kursi jarang; yang ramai itu jadwal tayangnya. Dan kalau
+memang bentrok, "kursi sudah diambil" itu jawaban yang benar, karena menunggu
+tidak mengubah hasilnya.
 
-### 3.4 Status pesanan, dan kasus tagihan gagal terbit
+### Urutan pemesanan
 
 ![Alur teknis pemesanan kursi](diagrams/3-alur-teknis-pemesanan.jpg)
 
 Sumber: [`3-alur-teknis-pemesanan.drawio`](diagrams/3-alur-teknis-pemesanan.drawio)
 
-Pembelian melewati dua halaman dan dua panggilan API, bukan satu:
+Pembeliannya lewat dua halaman dan dua panggilan API:
 
 ```
 [daftar film, bioskop, jam tayang]    ← data publik, bisa di-cache
@@ -156,21 +141,19 @@ Pembelian melewati dua halaman dan dua panggilan API, bukan satu:
 [halaman instruksi pembayaran]        ← Virtual Account / QR + hitung mundur
 ```
 
-Gerbang akun saya letakkan sebelum denah kursi. Kalau akun baru diminta setelah
+Gerbang akun saya taruh sebelum denah kursi. Kalau akun baru diminta setelah
 kursi dipilih, user sudah mengerjakan sesuatu lalu disuruh mendaftar, dan
-pendaftaran bisa memakan beberapa menit karena verifikasi email atau OTP. Saat
-ia kembali, kursi pilihannya bisa sudah diambil orang lain. Letak itu juga jatuh
-di batas antara data publik (kota, film, jam tayang) dan data rebutan (denah
-kursi), sehingga pembatasan kuota per akun menjadi mungkin. Konsekuensinya
-daftar jam tayang tidak memuat indikator ketersediaan kursi.
+pendaftaran bisa makan beberapa menit karena verifikasi email atau OTP. Begitu
+dia kembali, kursinya bisa sudah diambil orang. Letak itu juga pas di batas
+antara data publik (kota, film, jam tayang) dan data rebutan (denah kursi).
+Konsekuensinya daftar jam tayang tidak saya beri indikator sisa kursi.
 
-Kursi dipegang pada panggilan pertama, saat user meninggalkan halaman denah
-kursi. Kalau kursi baru dipegang pada panggilan kedua, dua orang bisa duduk di
-halaman ringkasan untuk kursi yang sama, dan yang kalah baru ditolak setelah
-memilih metode pembayaran.
+Kursi dipegang di panggilan pertama, saat user meninggalkan halaman denah kursi.
+Kalau baru dipegang di panggilan kedua, dua orang bisa duduk di halaman ringkasan
+untuk kursi yang sama, dan yang kalah baru ditolak setelah memilih metode bayar.
 
 Pesanannya dibuat lebih dulu karena `held_by_order` menunjuk ke `orders.id`:
-pemegang kursi harus punya identitas, dan identitas itu adalah pesanannya.
+pemegang kursi harus punya identitas, dan identitasnya itu pesanannya sendiri.
 
 | Status | Artinya | User bisa membayar? |
 | ------ | ------- | ------------------- |
@@ -181,77 +164,62 @@ pemegang kursi harus punya identitas, dan identitas itu adalah pesanannya.
 | `CANCELLED` | Dibatalkan user atau pihak bioskop | - |
 | `REFUNDED` | Dana sudah dikembalikan | - |
 
-`PENDING` bukan status sekejap. Ia dihuni selama user memilih metode pembayaran,
-bisa satu sampai dua menit, dan panggilan ke payment gateway sendiri juga bisa
-gagal. Kalau tagihan gagal terbit dan percobaan ulang tetap gagal, pesanan
-dibatalkan dan kursi dilepas saat itu juga, tidak menunggu 7 menit habis.
+`PENDING` bukan status sekejap. Dia dihuni selama user memilih metode bayar, bisa
+satu sampai dua menit, dan panggilan ke payment gateway sendiri juga bisa gagal.
+Kalau tagihan gagal terbit dan percobaan ulangnya tetap gagal, pesanan saya
+batalkan dan kursinya dilepas saat itu juga, tidak menunggu 7 menit habis.
 
-### 3.5 Membeli beberapa kursi sekaligus
+### Beberapa kursi sekaligus, dan peran Redis
 
-Orang menonton berdua atau bertiga, jadi klaim beberapa kursi harus
+Orang nonton berdua atau bertiga, jadi klaim beberapa kursi saya buat
 semua-atau-tidak. Kalau A6 keburu diambil, A5 dan A7 tidak boleh tetap tertahan.
-Ketiganya dijalankan dalam satu transaksi: kalau jumlah baris yang berubah lebih
-sedikit dari jumlah kursi yang diminta, seluruh transaksi di-`ROLLBACK`.
+Ketiganya jalan dalam satu transaksi, dan kalau baris yang berubah lebih sedikit
+dari kursi yang diminta, semuanya di-`ROLLBACK`.
 
-Satu hal yang perlu diperhatikan di sini: kalau Budi memilih [A5, A6] dan Siti
-memilih [A6, A5] pada saat yang sama, keduanya bisa saling menunggu kunci yang
-dipegang lawannya. Pencegahannya kursi selalu dikunci dalam urutan yang sama,
-nomor terkecil lebih dulu, lewat sub-query `ORDER BY seat_id ... FOR UPDATE`.
+Satu hal yang saya jaga di situ: kalau Budi pilih [A5, A6] dan Siti pilih
+[A6, A5] bersamaan, keduanya bisa saling menunggu kunci yang dipegang lawannya.
+Jadi kursi selalu saya kunci berurutan dari nomor terkecil, lewat
+`ORDER BY seat_id ... FOR UPDATE`.
 
-### 3.6 Peran Redis, dan kalau Redis mati
+Soal Redis: beban terbesar sistem ini bukan pembelian, tapi pembacaan denah
+kursi. Satu orang buka denah berkali-kali sebelum memutuskan, dan satu jadwal
+populer bisa dibuka ratusan orang sekaligus. Jadi denah kursi saya layani dari
+Redis, dan hanya itu tugas Redis di sini.
 
-Beban terbesar sistem ini bukan pembelian melainkan pembacaan denah kursi: satu
-orang membuka denah berkali-kali sebelum memutuskan, dan satu jadwal populer
-bisa dibuka ratusan orang sekaligus. Karena itu denah kursi dilayani dari Redis,
-dan hanya itu peran Redis di sini.
+Redis sengaja tidak ikut menahan kursi. Begitu penahanan dipegang perintah
+bersyarat di atas, kunci tambahan di Redis tidak menambah keamanan, hanya
+menambah satu cara gagal: kalau proses mati setelah memasang kunci tapi sebelum
+menulis ke database, kuncinya menggantung untuk kursi yang sebenarnya tidak
+dipegang siapa pun. Kalau Redis mati total, pembacaan jatuh ke PostgreSQL dan
+sistemnya jadi lebih lambat, tapi tidak pernah menjual kursi yang sama dua kali.
 
-Redis sengaja tidak ikut menahan kursi. Sekali penahanan dipegang oleh perintah
-bersyarat di bagian 3.3, kunci tambahan tidak menambah keamanan apa pun tapi
-menambah satu cara gagal: kalau proses mati setelah memasang kunci dan sebelum
-menulis ke database, kunci itu menggantung untuk kursi yang sebenarnya tidak
-pernah dipegang siapa pun. Jadi pembagiannya, Redis melayani pembacaan dan
-PostgreSQL memutuskan kepemilikan.
+## Restok dan pencatatan
 
-Kalau Redis mati total, pembacaan jatuh ke PostgreSQL sehingga sistem lebih
-lambat, tapi tidak pernah menjual kursi yang sama dua kali. Satu jebakan yang
-saya tangani: setelah kursi terjual, cache denah dibangun ulang dari PostgreSQL,
-bukan sekadar menghapus kunci penahannya, karena "tidak ada yang memegang kursi"
-tidak sama dengan "kursi tersedia".
-
----
-
-## 4. Pencatatan dan restok tiket
-
-### 4.1 Restok terjadi sendiri, tanpa program pembersih
-
-Kursi kembali tersedia pada empat kejadian:
+Kursi kembali tersedia di empat kejadian:
 
 | Kejadian | Pemicu |
 | -------- | ------ |
 | Masa tahan habis tanpa pembayaran | waktu |
 | Pembayaran gagal atau ditolak | webhook dari payment gateway |
-| Dibatalkan user sebelum tayang | user (dijual ulang bila masih lebih dari 30 menit sebelum jam tayang) |
+| Dibatalkan user sebelum tayang | user (dijual ulang kalau masih lebih dari 30 menit sebelum jam tayang) |
 | Jadwal dibatalkan pihak bioskop | admin (tidak dijual ulang, jadwalnya mati) |
 
-Untuk kejadian pertama saya tidak menggantungkan restok pada cron job. Kalau
-cron mati sepuluh menit, bioskop berhenti menjual kursi yang seharusnya sudah
-bebas, dan tidak ada yang menyadarinya.
-
-Yang saya pakai: kursi menyimpan waktu kedaluwarsanya, dan pegangan yang sudah
-lewat waktu otomatis boleh diambil alih, lewat klausa `expires_at <= now()` pada
-perintah klaim di bagian 3.3. Restok jadi bagian dari proses klaim itu sendiri,
+Untuk yang pertama saya tidak pakai cron job. Kalau cron-nya mati sepuluh menit,
+bioskop berhenti menjual kursi yang seharusnya sudah bebas dan tidak ada yang
+tahu. Yang saya pakai: kursi menyimpan waktu kedaluwarsanya, dan pegangan yang
+sudah lewat waktu otomatis boleh diambil alih lewat klausa `expires_at <= now()`
+di perintah klaim tadi. Restoknya jadi bagian dari proses klaim itu sendiri,
 bukan pekerjaan terpisah yang bisa gagal diam-diam. Program pembersih tetap ada
-untuk merapikan data dan mengirim metrik, tapi kalau ia mati, sistem tetap benar.
+untuk merapikan data dan kirim metrik, tapi kalau dia mati, sistemnya tetap
+benar.
 
-### 4.2 Riwayat tidak boleh tertimpa
+Soal pencatatan, menyimpan status terkini saja tidak cukup. Kalau kolom `status`
+ditimpa terus, begitu ada keluhan "saya sudah bayar tapi kursi saya diambil
+orang", yang kelihatan di database hanya satu kata tanpa keterangan kapan
+berubah, karena apa, dan oleh siapa.
 
-Menyimpan hanya status terkini tidak cukup. Kalau kolom `status` ditimpa terus,
-maka saat ada keluhan "saya sudah bayar tapi kursi saya diambil orang", yang
-terlihat di database hanya satu kata, tanpa keterangan jam berapa berubah, karena
-apa, dan oleh siapa.
-
-Karena itu setiap perpindahan keadaan kursi juga dicatat di tabel yang hanya
-boleh ditambah:
+Jadi tiap perpindahan keadaan kursi juga saya catat di tabel yang hanya bisa
+ditambah:
 
 ```
 seat_inventory_ledger
@@ -261,26 +229,23 @@ seat_inventory_ledger
 | 20:30:00 | 101      | A5   | SOLD      | REFUNDED  | cinema_cancel   | refund#77 |
 ```
 
-Prinsipnya seperti buku kas: kesalahan tidak dihapus, tapi dikoreksi dengan baris
-baru. Gunanya tiga hal. Sengketa bisa dibuktikan karena ada jejak waktu dan
-sebabnya. Laporan penjualan per cabang per periode tinggal diambil, termasuk
-persentase pegangan yang hangus, yang kalau tinggi berarti alur pembayarannya
-bermasalah. Dan jumlah perpindahan ke `SOLD` bisa dicocokkan dengan uang yang
-masuk, sehingga selisih ketahuan di transaksi mana.
+Ada tiga gunanya. Sengketa bisa dibuktikan karena ada jejak waktu dan sebabnya.
+Laporan penjualan per cabang tinggal diambil, termasuk persentase pegangan yang
+hangus, yang kalau tinggi berarti alur pembayarannya bermasalah. Dan jumlah
+perpindahan ke `SOLD` bisa dicocokkan dengan uang yang masuk, jadi selisihnya
+ketahuan di transaksi mana.
 
-Kolom `status` tetap ada sebagai keadaan terkini supaya denah kursi cepat dibaca;
-tabel riwayat adalah sejarahnya, dan keduanya ditulis dalam satu transaksi.
+Kolom `status` tetap ada supaya denah kursi cepat dibaca. Tabel riwayat ini
+sejarahnya, dan keduanya ditulis dalam satu transaksi.
 
----
-
-## 5. Refund dan pembatalan dari pihak bioskop
+## Refund dan pembatalan dari bioskop
 
 ![Alur refund dan pembatalan](diagrams/4-alur-refund.jpg)
 
 Sumber: [`4-alur-refund.drawio`](diagrams/4-alur-refund.drawio)
 
 Soal menyebut pembatalan dari pihak bioskop, misalnya proyektor rusak atau film
-ditarik distributor. Ini berbeda jauh dari pembatalan oleh user:
+ditarik distributor. Ini beda jauh dari user yang membatalkan sendiri:
 
 | | Dibatalkan user | Dibatalkan bioskop |
 | --- | --- | --- |
@@ -289,15 +254,11 @@ ditarik distributor. Ini berbeda jauh dari pembatalan oleh user:
 | Cakupan | 1 pesanan | Seluruh pemesanan pada jadwal itu (bisa ±200) |
 | Nasib kursi | Dijual ulang | Tidak, jadwalnya sendiri mati |
 
-### 5.1 Pembatalan adalah operasi massal
-
-Kalau 200 refund dikerjakan langsung di dalam permintaan admin, permintaan itu
+Kalau 200 refund dikerjakan langsung di dalam permintaan admin, permintaannya
 akan kehabisan waktu di tengah jalan dan tidak ada yang tahu mana yang sudah
-diproses. Kalau admin lalu mengklik ulang, sebagian refund berpotensi dikirim
-dua kali.
+diproses. Kalau admin lalu klik ulang, sebagian refund bisa terkirim dua kali.
 
-Yang saya rancang: permintaan admin hanya mencatat keputusannya, dalam satu
-transaksi.
+Jadi permintaan admin hanya mencatat keputusannya, dalam satu transaksi:
 
 ```sql
 BEGIN;
@@ -312,32 +273,27 @@ BEGIN;
 COMMIT;
 ```
 
-Semuanya harus berada dalam satu transaksi. Kalau daftar pekerjaan refund
-ditulis di langkah terpisah, ada kemungkinan jadwal tercatat dibatalkan
-sementara perintah refundnya tidak pernah masuk daftar: 200 orang tidak mendapat
-uangnya kembali, dan tidak ada error apa pun yang muncul.
+Semuanya harus satu transaksi. Kalau daftar pekerjaan refundnya ditulis di
+langkah terpisah, bisa terjadi jadwal tercatat dibatalkan sementara perintah
+refundnya tidak pernah masuk daftar: 200 orang tidak dapat uangnya kembali, dan
+tidak ada error apa pun yang muncul.
 
-Pemberitahuan ke customer juga masuk antrean pada transaksi yang sama, terpisah
-dari refundnya, karena waktunya berbeda. Refund bisa memakan satu sampai tujuh
-hari kerja, sedangkan customer perlu tahu sekarang bahwa jadwalnya dibatalkan
-supaya tidak berangkat ke bioskop untuk jadwal yang sudah tidak ada.
+Pemberitahuan ke customer ikut masuk antrean di transaksi yang sama, tapi
+terpisah dari refundnya, karena waktunya beda. Refund bisa satu sampai tujuh hari
+kerja, sedangkan customer perlu tahu sekarang supaya tidak berangkat ke bioskop
+untuk jadwal yang sudah tidak ada. Catatan pembatalannya juga menyimpan siapa
+admin yang membatalkan, kapan, alasannya, serta berapa pesanan dan nilai yang
+terdampak.
 
-Catatan pembatalannya menyimpan siapa admin yang membatalkan, kapan, alasannya,
-serta berapa pesanan dan berapa nilai yang terdampak. Pembatalan menyentuh uang
-banyak orang, jadi harus ada jejaknya.
+Pekerjaan refundnya dijalankan worker di latar belakang. Daftar pekerjaannya saya
+simpan sebagai tabel di PostgreSQL, bukan message broker tersendiri, supaya bisa
+ikut satu transaksi seperti di atas dan tidak menambah komponen yang harus
+dipasang dan diawasi. Worker mengambilnya dengan
+`SELECT ... FOR UPDATE SKIP LOCKED` supaya beberapa worker bisa jalan dari daftar
+yang sama tanpa saling menunggu.
 
-Pekerjaan refundnya sendiri dikerjakan worker di latar belakang. Daftar
-pekerjaan itu saya simpan sebagai tabel di PostgreSQL, bukan pada perangkat
-antrean tersendiri, supaya bisa masuk satu transaksi seperti di atas dan tidak
-menambah komponen yang harus dipasang serta diawasi. Worker mengambilnya dengan
-`SELECT ... FOR UPDATE SKIP LOCKED`, sehingga beberapa worker bisa bekerja dari
-daftar yang sama tanpa saling menunggu.
-
-### 5.2 Refund berjalan asinkron dan bisa gagal
-
-Uangnya ada di bank atau e-wallet, pengembaliannya butuh waktu, dan bisa gagal
-karena kartu kedaluwarsa atau akun ditutup. Karena itu refund punya status
-sendiri:
+Refund sendiri bisa gagal, karena uangnya ada di bank atau e-wallet dan kartunya
+bisa kedaluwarsa. Jadi refund punya status sendiri:
 
 ```
 REQUESTED ──► PROCESSING ──► SUCCEEDED
@@ -345,109 +301,89 @@ REQUESTED ──► PROCESSING ──► SUCCEEDED
                                       └─► masih gagal: alert ke tim
 ```
 
-Saat refund `SUCCEEDED`, pesanannya ditandai `REFUNDED`, perpindahan kursi
-`SOLD → REFUNDED` dicatat di tabel riwayat, dan customer diberi tahu. Refund
-`FAILED` wajib memicu alert, karena artinya ada customer yang uangnya tersangkut
-dan orang itu belum tentu mengeluh.
+Kalau `SUCCEEDED`, pesanannya jadi `REFUNDED`, perpindahan kursi dicatat di tabel
+riwayat, dan customer dikabari. Kalau `FAILED`, itu wajib memicu alert, karena
+artinya ada uang customer yang tersangkut dan orangnya belum tentu mengeluh.
 
-### 5.3 Satu pembayaran hanya boleh direfund sekali
+Yang paling saya jaga di bagian ini: satu pembayaran hanya boleh direfund sekali.
+Notifikasi gateway bisa datang dua kali, worker bisa mati setelah mengirim
+perintah tapi sebelum mencatatnya, dan admin bisa klik "Batalkan" berkali-kali.
+Penjagaannya di dua tempat. `UNIQUE (payment_id)` di tabel `refunds` menolak
+percobaan kedua di database, dan tiap perintah ke gateway membawa kunci yang sama
+(`refund-{order_id}`) supaya gateway mengenali permintaan berulang.
 
-Notifikasi dari payment gateway bisa datang dua kali, worker bisa mati setelah
-mengirim perintah refund tetapi sebelum mencatatnya, dan admin bisa mengklik
-"Batalkan" lebih dari sekali. Tanpa penjagaan, ketiganya berarti uang keluar
-berkali-kali.
+## Soal notifikasi pembayaran
 
-Penjagaannya di dua tempat. Di database, `UNIQUE (payment_id)` pada tabel
-`refunds` menolak percobaan kedua. Ke payment gateway, setiap perintah refund
-membawa kunci yang sama (`refund-{order_id}`) sehingga gateway mengenali
-permintaan berulang dan tidak mengirim uang untuk kedua kalinya.
+Uangnya dipegang pihak ketiga, dan webhook-nya bisa terlambat, dobel, atau
+hilang. Dua hal yang saya siapkan, keduanya karena menyentuh kepemilikan kursi.
 
----
+Tenggat tagihan saya samakan dengan tenggat pegangan kursi. Saat minta tagihan,
+sistem meneruskan `orders.expires_at` apa adanya, bukan "7 menit dari sekarang".
+Jadi berapa lama pun user memilih metode bayar, tenggatnya tidak bergeser dan
+hitung mundur yang dia lihat tetap satu dari awal sampai akhir. Pembayaran yang
+lewat tenggat ditolak gateway, jadi uangnya tidak keluar.
 
-## 6. Pembayaran: notifikasi tidak bisa diandalkan
+Notifikasi dobel ditangkis `UNIQUE (provider, payment_reference)`. Pemrosesan
+kedua tidak melakukan apa-apa dan tetap dijawab `200 OK`.
 
-Uang dipegang pihak ketiga, dan notifikasi pembayaran (webhook) bisa terlambat,
-datang dua kali, atau hilang. Dua hal yang saya siapkan, keduanya karena
-menyentuh kepemilikan kursi.
+Sisanya tidak bisa dicegah, hanya dikompensasi: user bayar sebelum tenggat tapi
+kabarnya sampai setelah kursinya diambil pesanan lain. Di situ perintah
+`UPDATE ... AND held_by_order = pesanan ini` mengembalikan nol baris, dan sistem
+langsung menjalankan refund otomatis.
 
-**Tenggat tagihan disamakan dengan tenggat pegangan kursi.** Saat meminta
-tagihan, sistem meneruskan `orders.expires_at` apa adanya sebagai batas
-pembayaran, bukan durasi "7 menit dari sekarang". Akibatnya berapa lama pun user
-memilih metode pembayaran, tenggatnya tidak bergeser, dan hitung mundur yang
-dilihat user tetap satu dari awal sampai akhir. Pembayaran yang lewat tenggat itu
-ditolak oleh gateway, jadi uangnya tidak pernah keluar.
-
-**Notifikasi ganda ditangkis idempotency.** Referensi pembayaran dari gateway
-disimpan dengan `UNIQUE (provider, payment_reference)`; pemrosesan kedua tidak
-melakukan apa pun dan tetap dijawab `200 OK`.
-
-Sisanya adalah kasus yang tidak bisa dicegah, hanya dikompensasi: user membayar
-sebelum tenggat tetapi kabarnya sampai setelah kursinya diambil pesanan lain.
-Di situ perintah `UPDATE ... AND held_by_order = pesanan ini` mengembalikan nol
-baris. Itu jawaban yang pasti, bukan dugaan, dan sistem langsung menjalankan
-refund otomatis.
-
-Perhatikan bahwa pegangan kursi yang kedaluwarsa tidak dihapus siapa pun,
-`held_by_order` tetap berisi nomor pesanan yang lama. Jadi kalau ternyata tidak
-ada yang mengambil kursi itu selama jeda tersebut, syaratnya tetap terpenuhi dan
-tiketnya tetap terbit tanpa refund. Refund otomatis hanya terjadi kalau kabar
-pembayaran terlambat **dan** kursinya benar-benar diperebutkan.
+Menariknya ini tidak selalu berujung refund. Pegangan kursi yang kedaluwarsa
+tidak dihapus siapa pun, `held_by_order` tetap berisi nomor pesanan yang lama.
+Jadi kalau ternyata tidak ada yang mengambil kursi itu selama jedanya, syaratnya
+masih terpenuhi dan tiketnya tetap terbit. Refund otomatis hanya terjadi kalau
+kabarnya terlambat dan kursinya benar-benar diperebutkan.
 
 Untuk notifikasi yang hilang, sistem menanyakan status ke gateway sekali sebelum
-pegangan kursi dilepas, dan ada pencocokan harian antara catatan kami dengan
-laporan gateway.
+pegangan kursi dilepas, dan ada pencocokan harian dengan laporan gateway.
 
----
-
-## 7. Topologi dan pembagian tanggung jawab
+## Topologi
 
 ![Topologi sistem](diagrams/1-topologi-sistem.jpg)
 
 Sumber: [`1-topologi-sistem.drawio`](diagrams/1-topologi-sistem.drawio)
 
-Aturan yang saya pakai saat menyusunnya: setiap komponen harus bisa dijawab
-"kenapa ini ada?".
+Aturan saya saat menyusunnya, tiap komponen harus bisa dijawab "kenapa ini ada?".
 
 | Komponen | Tanggung jawab |
 | -------- | -------------- |
 | API (satu deployment, banyak modul, *stateless*) | Seluruh logika. Tidak menyimpan keadaan di memorinya sendiri, jadi jumlah instance bisa ditambah atau dikurangi bebas |
 | Worker (dipisah sejak awal) | Refund massal, percobaan ulang, pencocokan, pengiriman e-ticket |
-| Redis | Cache denah kursi. Percepatan pembacaan, tidak ikut memutuskan kepemilikan |
+| Redis | Cache denah kursi. Mempercepat pembacaan, tidak ikut memutuskan kepemilikan |
 | PostgreSQL primary | Penentu kebenaran. Semua penulisan kursi dan uang |
 | Monitoring dan alert | Refund gagal dan selisih pencocokan harus ada yang mengetahui |
 
 Modul `auth`, `catalog`, `booking`, `payment`, dan `notification` saya gambar di
-dalam satu deployment, bukan sebagai layanan terpisah. Memisahkannya sejak awal
-menambah biaya nyata, yaitu transaksi lintas layanan dan penelusuran masalah yang
-menyebar, tanpa manfaat pada skala ini. Yang saya pisahkan sejak awal hanya
-worker, karena sifat kerjanya berbeda: berjalan di latar belakang, punya
-percobaan ulang sendiri, dan tidak terikat pada permintaan HTTP.
+dalam satu deployment, bukan layanan terpisah. Memisahkannya dari awal menambah
+biaya nyata, yaitu transaksi lintas layanan dan penelusuran masalah yang
+menyebar, tanpa manfaat di skala ini. Yang saya pisah dari awal hanya worker,
+karena sifat kerjanya beda: jalan di latar belakang, punya percobaan ulang
+sendiri, dan tidak terikat permintaan HTTP.
 
-Bagian yang saya implementasikan pada Poin C, yaitu API login dan CRUD jadwal
-tayang, berada di modul `auth` dan `catalog`. Di dalam kode keduanya menjadi
-paket `internal/auth` dan `internal/showtime`.
+Bagian yang saya implementasikan di Poin C, yaitu API login dan CRUD jadwal
+tayang, ada di modul `auth` dan `catalog`. Di kode keduanya jadi paket
+`internal/auth` dan `internal/showtime`.
 
----
+## Batasan
 
-## 8. Batasan dan asumsi
+Ini rancangan, belum sistem yang berjalan. Beberapa hal yang perlu saya sebut
+terus terang:
 
-Dokumen ini adalah rancangan, bukan laporan sistem yang sudah berjalan.
-
-- Perkiraan beban bersifat asumsi, bukan data lapangan. Yang saya jadikan dasar
-  adalah sifat bebannya: pembacaan denah kursi jauh lebih banyak daripada
-  pembelian, dan beban terberat terjadi pada satu jadwal yang sama.
-- Yang saya implementasikan dalam tes ini adalah Poin C, yaitu API login dan
-  CRUD jadwal tayang. Modul `booking`, `payment`, dan `notification` pada
-  topologi hanya dirancang, tidak dikerjakan.
-- Pertimbangan seperti tenggat pembayaran absolut, pencocokan berkala, dan refund
-  otomatis saat kursi bentrok saya sertakan karena menurut analisa saya kasus itu
-  akan terjadi pada sistem seperti ini, bukan karena saya sudah pernah
-  menanganinya di lingkungan produksi.
-- Angka 7 menit untuk masa tahan kursi dan 30 menit untuk batas penjualan ulang
-  adalah nilai awal lewat konfigurasi, dipilih karena sebanding dengan waktu yang
-  umumnya dibutuhkan untuk membayar, bukan hasil pengukuran.
-- Nama produk yang disebut (Midtrans, Xendit, dan sejenisnya) adalah contoh.
-  Yang saya tetapkan adalah perannya di dalam sistem.
-- Yang belum saya rancang: angka pembatasan kuota per akun pada halaman denah
-  kursi, dan perilaku sistem saat payment gateway tidak bisa dihubungi sama
-  sekali dalam waktu lama.
+- Perkiraan bebannya asumsi, bukan data lapangan. Yang saya jadikan dasar hanya
+  sifat bebannya: pembacaan denah kursi jauh lebih banyak daripada pembelian, dan
+  yang terberat menumpuk di satu jadwal yang sama.
+- Yang benar-benar saya implementasikan hanya Poin C. Modul `booking`, `payment`,
+  dan `notification` di topologi baru sampai tahap rancangan.
+- Hal seperti tenggat pembayaran absolut, pencocokan berkala, dan refund otomatis
+  saya sertakan karena menurut analisa saya kasusnya akan terjadi di sistem
+  seperti ini, bukan karena saya sudah pernah menanganinya di produksi.
+- Angka 7 menit dan 30 menit itu nilai awal di konfigurasi, dipilih karena
+  sebanding dengan waktu yang umumnya dibutuhkan untuk membayar, bukan hasil
+  pengukuran.
+- Midtrans, Xendit, dan nama produk lain yang saya sebut hanya contoh. Yang saya
+  tetapkan perannya di dalam sistem.
+- Yang belum saya rancang: angka pembatasan kuota per akun di halaman denah
+  kursi, dan perilaku sistem kalau payment gateway tidak bisa dihubungi lama.
